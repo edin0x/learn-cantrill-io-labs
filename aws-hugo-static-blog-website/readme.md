@@ -42,25 +42,81 @@ Before we can start building and deploying our static site, we'll need to set up
 2. Follow the prompts to create a new AWS account and enter your billing information.
 3. Once your account is set up, log in to the [AWS Management Console](https://console.aws.amazon.com/).
 
-# Stage 1: Creating and configuring an S3 bucket
+Great! You've just set up an AWS account. The next step is to configure an IAM user for programmatic access. This will allow us to manage AWS resources from our local machine.
+
+# Stage 1: Configuring an IAM user for programmatic access
+In order to manage AWS resources from our local machine, we'll need to configure an IAM user for programmatic access. Here's how to do it:
+1. In the search bar at the top of the page, search for "IAM" and select the IAM service.
+2. In the left sidebar, click the "Users" link.
+3. Click the "Add user" button.
+4. Enter a name for the user and select the "Programmatic access" checkbox. We'll be using `hugo` as the reference user name for this tutorial.
+5. Click the "Next: Permissions" button.
+6. Click the "Attach existing policies directly" button.
+7. Search for "AWSCodeCommitPowerUser" and select the checkbox next to it. This will allow the user to access AWS CodeCommit.
+8. Click the "Next: Tags" button.
+9. Click the "Next: Review" button.
+10. Click the "Create user" button.
+11. Make sure to save the Access key ID and Secret access key. You'll need these to configure AWS CLI on your local machine. You can also download the .csv file containing the credentials.
+
+You've just configured an IAM user for programmatic access. The next step is to configure AWS CLI on your local machine.
+
+# Stage 2: Configuring AWS CLI
+AWS CLI is a command-line tool that allows you to manage AWS resources from your local machine. It's a great tool to have, so let's get it set up.
+
+Here's how to do it:
+1. Go to the [AWS CLI download page](https://aws.amazon.com/cli/) and follow the instructions to download and install AWS CLI on your local machine.
+2. Once AWS CLI is installed, open a terminal and run the following command to configure AWS CLI:
+    ```bash
+    aws configure
+    ```
+3. Enter your AWS Access Key ID and AWS Secret Access Key. You can find these in the [AWS Management Console](https://console.aws.amazon.com/).
+4. For the default region name, enter `eu-central-1` (or any other region of your choice)
+5. For the default output format, enter `json`.
+
+You've just set up AWS CLI. The next step is to configure the necessary resources for hosting a static site.
+
+# Stage 3: Configuring Git and CodeCommit
+Before we can start building and deploying our static site, we need to store the source code for our site in a version control system. In this stage, we'll use AWS CodeCommit to store the source code for our site remotely at AWS. The code stored in CodeCommit will be used to build and deploy our site to our earlier configured S3 bucket. For local development, we need to configure git. So let's setup git first.
+
+On most Linux and Mac machines, git is already installed. If not, you can install it from [here](https://git-scm.com/downloads). Choose your operating system and follow the instructions to install git.
+
+Now that we have git installed, we need to configure it to use CodeCommit. Here's how to do it:
+1. Open a terminal and run the following command: `git config --global credential.helper '!aws codecommit credential-helper $@'`. This instructs git to use AWS CodeCommit as the credential helper to authenticate with CodeCommit using the AWS credentials that we obtained previously.
+2. Now also run: `git config --global credential.UseHttpPath true`. This instructs git to supply the path portion of the remote URL to credential helpers.
+
+1. In the search bar at the top of the page, search for "CodeCommit" and select the CodeCommit service.
+2. Click the "Create repository" button to create a new repository.
+3. For *Repository name*, enter a name for your repository. As an example reference, we'll use `static-blog-website` for the remainder of this tutorial.
+4. Click the "Create" button to create the repository.
+5. Click the "Clone URL" button to copy the HTTPS clone URL for the repository.
+6. Open a terminal and navigate to the directory where you want to store the source code for your site.
+7. In the terminal run the `git clone <copied-https-url>` command to clone the remote repository locally. For example, if the HTTPS clone URL is `https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/static-blog-website`, then the command would be `git clone https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/static-blog-website`. This will clone the repository to a directory called `static-blog-website` in the current directory.
+
+Awesome! You've just configured git to use CodeCommit and cloned the remote repository locally. The next step is to create a Hugo site and push it to CodeCommit.
+
+# Stage 4: Creating a Hugo site and pushing it to CodeCommit
+<!-- TODO -->
+
+# Stage 5: Creating and configuring an S3 bucket
 Now that we have an AWS account, we need to configure the necessary resources for hosting a static site. Recall that we want to use S3 and CloudFront to host our static site. We'll start by creating an S3 bucket to store our static files.
 
 Here's how to do it:
 1. In the search bar at the top of the page, search for "S3" and select the S3 service.
 3. Click the "*Create Bucket*" button to create a new S3 bucket.
-4. For *AWS Region*, select `eu-central-1`.
-5. Leave the rest of the settings as default for now and click the "Create" button to create the bucket.
+4. For the bucket name choose a for you recognizable name. It helps if this is the web address to your website. The name must also be globally unique (in case it isn't an error message will be shown). As an example reference, we'll use  `www.static-blog-website.com` for the remainder of this tutorial as the name of the bucket and domain.
+5. For *AWS Region*, select `eu-central-1`, or any other region that is close to you. This is the region where your bucket will be created.
+6. Leave the rest of the settings as default for now and click the "Create" button to create the bucket.
 
-Great! You've just created an S3 bucket where we can store our static files.
+Great! You've just created an S3 bucket where we can store our static files. The next step is to configure a CloudFront distribution to serve our static files from S3.
 
-# Stage 2: Creating and configuring a CloudFront distribution
-Now that we have an S3 bucket, we need to configure a CloudFront distribution to serve our static files from S3. 
+# Stage 6: Creating and configuring a CloudFront distribution
+CloudFront is a content delivery network (CDN) service that allows you to securely deliver content to viewers with low latency and high transfer speeds. We'll use CloudFront to serve our static files from S3.
 
-<!-- TODO -->
+Here's how to do it:
+1. In the search bar at the top of the page, search for "CloudFront" and select the CloudFront service.
+2. Click the "Create Distribution" button to create a new CloudFront distribution.
+3. For *Origin Domain Name*, select the S3 bucket that we created in the previous stage. As the example case, we'll select `www.static-blog-website.com.s3.eu-central-1.amazonaws.com`. The origin is the location where CloudFront gets the files that it will serve to viewers.
+4. Leave the rest of the settings as default for now and click the "Create Distribution" button to create the distribution.
+5. Wait for the distribution to be deployed. This may take a few minutes.
 
 Now you have an AWS account and the necessary resources for hosting a static site. In the next stage, we'll set up an Amazon CodeCommit repository to store the source code for our static site.
-
-# Stage 3: Storing the source code with AWS
-Before we can start building and deploying our static site, we need to store the source code for our site in a version control system. In this tutorial, we'll use AWS CodeCommit to store the source code for our site.
-
-<!-- TODO -->
